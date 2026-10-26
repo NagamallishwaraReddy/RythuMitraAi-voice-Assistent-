@@ -1,0 +1,20 @@
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+# Databases and secrets
+backend/data/
+.env
+.env.*
+!.env.example
+*.sqlite3
+# Editor/system
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+!.vscode/launch.json
