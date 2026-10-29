@@ -1,17 +1,16 @@
 # 🌿 RythuMitra AI — Voice-First Farming Companion
 
-**Phase 1: React frontend + FastAPI backend.** The visual design follows the mockup supplied for this project. This first phase intentionally does **not** include Gnani.ai or a live reasoning LLM; it is an executable foundation, with browser-based voice previews where supported.
+**Current stack: React + FastAPI + SQLite, with optional Gemini and Gnani integrations.** The existing green-and-white interface, routes, and conversation history are preserved.
 
 ## What works right now
 
 - Responsive, green-and-cream **landing page** inspired by the reference image.
 - Dedicated **voice-agent screen** with microphone, animated visualizer, selected language, chat bubbles, and answer playback controls.
-- **Typed questions** go to a real FastAPI backend and return clearly labeled **example** farming responses.
+- **Typed questions** retain the existing FastAPI/SQLite conversation workflow. With `GEMINI_API_KEY` configured, responses use Gemini and Google Search grounding; without it, the backend labels its deterministic responses as demo mode.
 - **Conversation history** persists in SQLite; create, open, and delete chats.
-- **Browser speech-recognition preview** on supported browsers (often Chrome). Recording/transcription is handled by the browser—not yet by Gnani Prisma. Browser support, service access and privacy behavior vary.
-- **Browser text-to-speech preview** on supported devices. Voices differ by operating system; it is **not Gnani Timbre** yet.
-- A selector lists 10 planned Indian-language locales. Example backend answer templates currently cover **Telugu and English only**; other selections currently fall back to English. Full language support depends on later model integration and testing.
-- `/api/voice/transcribe` and `/api/voice/synthesize` explicitly return `501 Not Implemented` until Gnani integration, rather than faking API results.
+- Microphone audio is recorded with `MediaRecorder`, uploaded to FastAPI, transcribed by Gnani Prisma, and presented for correction before submission.
+- Assistant audio uses Gnani Timbre WAV with Play, Pause, and Replay controls. Timbre v2.5 voice selection is mapped to the selected language.
+- The UI's ten BCP-47 locale codes are validated by the backend. Actual provider availability depends on the configured account and model access.
 
 **Important:** The example replies are not verified agronomic diagnoses or pesticide/fertilizer prescriptions. Do not use them as professional agricultural advice.
 
@@ -20,19 +19,19 @@
 | Layer | Technology |
 |---|---|
 | Frontend | React 18, Vite 6, responsive custom CSS, Lucide icons |
-| Backend | Python 3.10+, FastAPI, Pydantic |
+| Backend | Python 3.10+, FastAPI, Pydantic, `google-genai`, `httpx` |
 | Persistence | SQLite built into Python |
-| Voice preview | Optional browser `SpeechRecognition` and `speechSynthesis` |
-| Planned speech-to-text | Gnani Prisma |
-| Planned text-to-speech | Gnani Timbre |
-| Planned reasoning | LLM API with cited agricultural knowledge |
+| Speech-to-text | Gnani Prisma REST API, FFmpeg conversion |
+| Text-to-speech | Gnani Timbre v2.5 REST API |
+| Reasoning | Gemini API with Google Search grounding |
 
 ## Requirements on Ubuntu / VS Code
 
 - Python 3.10 or later
 - Node.js 20 or later and npm
+- FFmpeg and FFprobe (`sudo apt install ffmpeg` on Ubuntu)
 - VS Code with Python and JavaScript extensions
-- Chromium/Google Chrome recommended for the temporary voice preview
+- A secure context for microphone access (localhost is supported)
 
 You can use GitHub Copilot to inspect/edit the source. Keep API keys out of Git.
 
@@ -45,12 +44,31 @@ cd rythumitra-ai/backend
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
+cp .env.example .env
 uvicorn app.main:app --reload --port 8000
 ```
 
+To enable PostgreSQL locally on Ubuntu, create a role and database once (run this yourself because it uses the system PostgreSQL administrator account):
+
+```bash
+sudo -u postgres psql
+```
+
+At the `psql` prompt, set a private password of your choice:
+
+```sql
+CREATE USER rythumitra WITH PASSWORD 'choose_a_local_password';
+CREATE DATABASE rythumitra OWNER rythumitra;
+\q
+```
+
+Edit `backend/.env` and replace the password in `DATABASE_URL`. Set `GEMINI_API_KEY`, `GNANI_STT_KEY`, and `GNANI_TTS_KEY` when those providers are available. `GEMINI_MODEL` defaults to `gemini-3.8-flash`; `GNANI_TTS_MODEL` defaults to `timbre-v2.5`. Do not commit `.env` or put provider keys in frontend variables. If Gemini rejects the configured model, the API returns that provider error and compatible options; it does not switch models automatically.
+
+Set `MIGRATE_SQLITE_HISTORY=1` for the first PostgreSQL startup if you want to copy existing SQLite conversations into an empty PostgreSQL database. This copy is non-destructive; SQLite remains unchanged. Set it back to `0` after migration. If `DATABASE_URL` is unset, local tests and development use the SQLite fallback.
+
 FastAPI docs: **http://localhost:8000/docs**
 
-Check: **http://localhost:8000/api/health**
+Check: **http://localhost:8000/api/health**. It reports `database: postgresql` and `database_status: ok` when PostgreSQL is connected. If the role, database, or URL is wrong, the API returns a clear database-unavailable response rather than an opaque `500`.
 
 ### Terminal 2 — React
 
@@ -70,48 +88,48 @@ Vite proxies `/api` calls to FastAPI on port 8000. Both terminals must remain op
 
 1. Open the home page: the farmer hero, three feature cards and step-by-step explanation should display.
 2. Click **Try the assistant**.
-3. Click the example **Paddy leaf yellowing**. The backend should create a chat and return a Telugu example response.
+3. Click the example **Paddy leaf yellowing**. With Gemini configured, the response is generated and grounded by the provider; without a key, the API reports demo mode.
 4. Refresh the page. Your conversation should appear in **Your conversations**.
-5. Type a question in English and change language to English. The response should use the English example template.
-6. Click **Listen to answer** for browser audio preview.
-7. Click the microphone and allow browser microphone permission. In supported browsers, speech transcription is a **browser preview**, not Gnani. If unsupported, type instead.
+5. Type a question in English and change language to English.
+6. Use Play, Pause, or Replay to control the generated Gnani Timbre reply.
+7. Record a short question; review and correct the transcript in the composer before sending it.
 8. Try **New conversation**, open an older chat, and delete it.
 
 ### Backend test suite
 
 ```bash
 cd rythumitra-ai/backend
-pip install pytest httpx
 python -m pytest -q
 ```
 
+Provider tests use mocks and do not incur API calls. Live provider checks require credentials in `backend/.env`.
+
 ## API overview
 
-| Method | Route | Phase 1 |
+| Method | Route | Behavior |
 |---|---|---|
 | GET | `/api/health` | Ready |
 | GET | `/api/conversations` | Ready |
 | POST | `/api/conversations` | Ready |
 | GET | `/api/conversations/{id}` | Ready |
 | DELETE | `/api/conversations/{id}` | Ready |
-| POST | `/api/chat` | Ready, **scripted example advisor** |
-| POST | `/api/voice/transcribe` | Placeholder (501) |
-| POST | `/api/voice/synthesize` | Placeholder (501) |
+| POST | `/api/chat` | Gemini when configured; explicit demo mode without a Gemini key |
+| POST | `/api/voice/transcribe` | Multipart `audio_file` + `language_code`; Prisma transcript |
+| POST | `/api/voice/synthesize` | JSON text/locale; returns `audio/wav` from Timbre |
 
 The API documentation includes interactive JSON request examples.
 
-## Next phase: connect Gnani + reasoning LLM
+## Provider setup and limitations
 
-Do this only after the current frontend/backend run correctly.
-
-1. **Prisma STT:** Add `POST /api/voice/transcribe` that receives audio uploaded from the React microphone; validate audio type/size/duration and transcode browser audio where needed, then send audio to Prisma using a **backend-only** Gnani credential. Return the transcript and associated language. Handle errors, dialects and uncertain recognition without inventing a transcript.
-2. **Reasoning:** Replace `DemoAdvisor` with an LLM agent. Pass the transcript, selected language, confirmed location/crop details, and relevant snippets from verified ICAR/agricultural-university resources. Ask for missing details. Return plain-language text plus actual source citations. Block invented chemical dosages/diagnoses.
-3. **Timbre TTS:** Implement `POST /api/voice/synthesize` to call Gnani Timbre with the final response. Return the audio file/stream using a matching MIME type and play it in React. Voice availability must be checked by language.
-4. **Persistence:** Preserve conversation continuity and farmer-provided details with user control and a privacy policy; store raw audio only if explicitly needed and agreed.
-5. **Language testing:** Verify each displayed language for both speech input and audio output on your actual Gnani account. Don't assume every language is available for every model and voice.
+- Gemini grounding uses Google Search. It prioritizes official agricultural domains and returns only source URLs actually present in the provider's grounding metadata. Search grounding is not a guarantee that every answer is agronomically verified.
+- Exact fertilizer/pesticide rates and diagnoses are not invented; the system prompt requires clarification or a local agricultural expert when material facts are missing.
+- Prisma accepts the ten configured Indian locales and recordings up to 60 seconds/15 MB; FFmpeg normalizes supported browser formats to mono 16 kHz WAV.
+- Timbre v2.5 uses the official preferred voice mapping per locale. Unsupported languages and provider errors are returned to the UI rather than synthesized in another language.
+- Live API calls have not been verified until valid local credentials are configured and a live request succeeds.
 
 **Documentation:**
 - [Gnani developer quick start](https://docs.gnani.ai/api/introduction/quick-start)
+- [Gemini API docs](https://ai.google.dev/gemini-api/docs)
 - [Gnani voice docs](https://docs.gnani.ai/)
 - [FastAPI](https://fastapi.tiangolo.com/)
 - [Vite](https://vite.dev/)
@@ -151,24 +169,15 @@ rythumitra-ai/
 - Images are cropped from design mockups provided in this project session; replace with licensed, original photography before deploying if appropriate.
 
 ---
-**Status:** Frontend/back-end prototype created. **Gnani STT/TTS and reasoning LLM intentionally deferred.**
+**Status:** Gemini, Gnani Prisma, and Gnani Timbre integrations are implemented. Their live availability depends on valid keys, model access, account quota, and provider support; live calls have not been verified without local credentials.
 
-## Any-crop support — updated Phase 1 scope
+## Current Limits
 
-**RythuMitra AI is NOT limited to paddy.** A farmer should eventually be able to
-ask *any agricultural question about any crop*. The UI now features cotton,
-tomato, maize, banana and paddy examples, and the backend recognizes common
-crop names across several Indian languages. It also remembers the crop from
-recent questions within a conversation, so you can ask follow-ups such as
-"How much water does it need?"
+Gemini uses Google Search grounding with a preference for official agricultural sources. Grounding and returned citations do not guarantee agronomic correctness. Answers must not replace advice from a local agricultural extension officer, especially for diagnosis or high-impact chemical decisions.
 
-**Be clear about the current limitation:** This Phase 1 backend remains a
-**rule-based demo**, not a real reasoning LLM. It does **not** yet provide
-open-ended, evidence-based advice about every possible crop. For recognized
-questions it asks cautious, crop-specific clarification questions. For
-unrecognized crops or questions it requests more information rather than
-inventing advice. Telugu and English demo templates are available; other
-selected languages fall back to English until the multilingual LLM is wired up.
+The provider clients support the ten locales documented for Prisma and Timbre v2.5. The selected Timbre voice is chosen from Gnani's official preferred-voice catalog for that locale. A provider/account can still reject a model, language, or voice; the API returns that error instead of silently switching providers.
+
+Without `GEMINI_API_KEY`, the backend explicitly reports demo mode and uses the existing deterministic example advisor. If Gemini is configured but fails, the request returns the provider error and does not fall back to demo content.
 
 ### Sample questions
 
@@ -178,17 +187,3 @@ selected languages fall back to English until the multilingual LLM is wired up.
 - Banana: "What should I know before applying fertilizer to banana plants?"
 - Paddy: "Why are my paddy leaves turning yellow?"
 - Follow-up: Ask about cotton, then ask "How old should it be before harvesting?"
-
-### Phase 2 — how to enable *genuine* any-crop answers
-
-1. Add Gnani Prisma STT for farmer audio.
-2. Send the verified transcript, conversation history, and chosen language to a
-   multilingual reasoning LLM (Gemini or another tested free-tier API).
-3. Retrieve and cite relevant, **verified** agricultural information by crop,
-   location, season and growth stage (agricultural university / extension
-   references); allow safe clarification when the answer is uncertain.
-4. Keep high-impact chemical, fertilizer and diagnosis advice grounded; do not
-   fabricate doses, treatments, or guarantees.
-5. Use Gnani Timbre to synthesize the approved answer in the selected language.
-
-No real Gnani or LLM integration is claimed in Phase 1.
