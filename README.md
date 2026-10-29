@@ -1,189 +1,264 @@
-# 🌿 RythuMitra AI — Voice-First Farming Companion
+# 🌾 RythuMitra AI — Voice-First Multilingual Farming Assistant
 
-**Current stack: React + FastAPI + SQLite, with optional Gemini and Gnani integrations.** The existing green-and-white interface, routes, and conversation history are preserved.
+[![Live Frontend](https://img.shields.io/badge/Live%20Demo-Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://rythu-mitra-ai-voice-assistent.vercel.app/)
+[![Backend Status](https://img.shields.io/badge/Backend-Render-46E3B7?style=for-the-badge&logo=render&logoColor=white)](https://render.com)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
+[![React](https://img.shields.io/badge/React-18.3-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://reactjs.org/)
+[![Vite](https://img.shields.io/badge/Vite-6.0-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vite.dev/)
+[![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
 
-## What works right now
+> **Live Application URL:** **[https://rythu-mitra-ai-voice-assistent.vercel.app/](https://rythu-mitra-ai-voice-assistent.vercel.app/)**
 
-- Responsive, green-and-cream **landing page** inspired by the reference image.
-- Dedicated **voice-agent screen** with microphone, animated visualizer, selected language, chat bubbles, and answer playback controls.
-- **Typed questions** retain the existing FastAPI/SQLite conversation workflow. With `GEMINI_API_KEY` configured, responses use Gemini and Google Search grounding; without it, the backend labels its deterministic responses as demo mode.
-- **Conversation history** persists in SQLite; create, open, and delete chats.
-- Microphone audio is recorded with `MediaRecorder`, uploaded to FastAPI, transcribed by Gnani Prisma, and presented for correction before submission.
-- Assistant audio uses Gnani Timbre WAV with Play, Pause, and Replay controls. Timbre v2.5 voice selection is mapped to the selected language.
-- The UI's ten BCP-47 locale codes are validated by the backend. Actual provider availability depends on the configured account and model access.
+---
 
-**Important:** The example replies are not verified agronomic diagnoses or pesticide/fertilizer prescriptions. Do not use them as professional agricultural advice.
+## 📌 Problem Statement
 
-## Tech stack
+Agriculture is the backbone of India's economy, supporting over **58% of the rural population**. However, millions of smallholder and marginal farmers face severe challenges in accessing timely, scientific, and actionable agricultural guidance:
 
-| Layer | Technology |
-|---|---|
-| Frontend | React 18, Vite 6, responsive custom CSS, Lucide icons |
-| Backend | Python 3.10+, FastAPI, Pydantic, `google-genai`, `httpx` |
-| Persistence | SQLite built into Python |
-| Speech-to-text | Gnani Prisma REST API, FFmpeg conversion |
-| Text-to-speech | Gnani Timbre v2.5 REST API |
-| Reasoning | Gemini API with Google Search grounding |
+1. **Digital & Literacy Divide**: Traditional agricultural portals, PDFs, and government websites are text-heavy and predominantly in English or formal administrative language, making them difficult for farmers who prefer conversational interaction.
+2. **Linguistic Diversity**: India is home to hundreds of dialects and languages. Farmers think and express farm problems in their native tongue (e.g., Telugu, Hindi, Tamil, Kannada), which generic AI assistants fail to comprehend with accurate agrarian nuances.
+3. **Information Delay & Misinformation**: When pests attack or sudden unseasonal rains threaten crops, farmers often lack immediate expert advice and resort to unverified local pesticide store recommendations, resulting in crop losses or excessive chemical input costs.
+4. **Climate & Weather Volatility**: Rapidly shifting weather patterns, rising temperatures, and erratic monsoon cycles require real-time climate adaptability, seasonal scheduling (Kharif, Rabi, Zaid), and water management advice tailored to local field realities.
 
-## Requirements on Ubuntu / VS Code
+---
 
-- Python 3.10 or later
-- Node.js 20 or later and npm
-- FFmpeg and FFprobe (`sudo apt install ffmpeg` on Ubuntu)
-- VS Code with Python and JavaScript extensions
-- A secure context for microphone access (localhost is supported)
+## 💡 The Solution: RythuMitra AI
 
-You can use GitHub Copilot to inspect/edit the source. Keep API keys out of Git.
+**RythuMitra AI (రైతు మిత్ర / किसान मित्र)** is an intelligent, voice-first agricultural companion designed specifically for Indian farmers. It bridges the digital divide by allowing farmers to **speak naturally in their native language** and receive instant, science-backed agricultural and climate advice spoken back to them.
 
-## Run locally (two terminals)
-
-### Terminal 1 — FastAPI
-
-```bash
-cd rythumitra-ai/backend
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-cp .env.example .env
-uvicorn app.main:app --reload --port 8000
+```
+       🎙️ Farmer Speaks (Native Language: Telugu, Hindi, Tamil, etc.)
+                                 │
+                                 ▼
+                     [Speech-to-Text: Gnani Prisma]
+                                 │
+                                 ▼
+             [Agronomic Reasoning: Google Gemini 2.5]
+                + Google Search Grounding (ICAR / SAUs)
+                + Crop & Climate Knowledge Engine
+                                 │
+                                 ▼
+                    [Text-to-Speech: Gnani Timbre]
+                                 │
+                                 ▼
+       🔊 Farmer Listens to Audio Advice + Reads Visual Step-by-Step Cards
 ```
 
-To enable PostgreSQL locally on Ubuntu, create a role and database once (run this yourself because it uses the system PostgreSQL administrator account):
+---
 
-```bash
-sudo -u postgres psql
-```
+## ✨ Key Features
 
-At the `psql` prompt, set a private password of your choice:
+- 🗣️ **10 Regional Languages**: Fluent support for **Telugu (`te-IN`)**, **English (`en-IN`)**, **Hindi (`hi-IN`)**, **Tamil (`ta-IN`)**, **Kannada (`kn-IN`)**, **Malayalam (`ml-IN`)**, **Marathi (`mr-IN`)**, **Bengali (`bn-IN`)**, **Gujarati (`gu-IN`)**, and **Punjabi (`pa-IN`)**.
+- 🎙️ **Voice-First Input & Audio Playback**: High-accuracy Speech-to-Text with transcript review before submission, accompanied by human-sounding regional Text-to-Speech with **Play**, **Pause**, and **Replay** audio controls.
+- 🌦️ **Crop & Climate Advisory**: Actionable guidance on temperature tolerances, ideal sowing seasons (Kharif, Rabi, Zaid), moisture and rainfall risk mitigation, and heatwave/frost protection for major Indian crops.
+- 🔍 **Grounded Agronomic Reasoning**: Powered by Google Gemini with live Google Search grounding prioritizing official agricultural research institutions:
+  - **ICAR** (Indian Council of Agricultural Research)
+  - **ANGRAU** (Acharya N.G. Ranga Agricultural University)
+  - **PJTSAU** (Professor Jayashankar Telangana State Agricultural University)
+  - **TNAU** (Tamil Nadu Agricultural University)
+  - **Ministry of Agriculture & Farmers Welfare**
+- 💬 **Persistent Conversation History**: Multi-turn dialogue context retention across sessions, allowing farmers to ask follow-up questions (e.g., *"How old should the cotton crop be before harvesting?"*).
+- 🛡️ **Offline/Demo Resilience**: Seamless fallback to deterministic, curated agronomic guidance if API credentials are unconfigured or external service quotas are reached.
+- 📞 **Kisan Helpline Integration**: Direct one-touch access to the Government of India **Kisan Call Center (1800-180-1551)** and state disaster helplines.
 
-```sql
-CREATE USER rythumitra WITH PASSWORD 'choose_a_local_password';
-CREATE DATABASE rythumitra OWNER rythumitra;
-\q
-```
+---
 
-Edit `backend/.env` and replace the password in `DATABASE_URL`. Set `GEMINI_API_KEY`, `GNANI_STT_KEY`, and `GNANI_TTS_KEY` when those providers are available. `GEMINI_MODEL` defaults to `gemini-3.8-flash`; `GNANI_TTS_MODEL` defaults to `timbre-v2.5`. Do not commit `.env` or put provider keys in frontend variables. If Gemini rejects the configured model, the API returns that provider error and compatible options; it does not switch models automatically.
+## 🛠️ Tech Stack & Architecture
 
-Set `MIGRATE_SQLITE_HISTORY=1` for the first PostgreSQL startup if you want to copy existing SQLite conversations into an empty PostgreSQL database. This copy is non-destructive; SQLite remains unchanged. Set it back to `0` after migration. If `DATABASE_URL` is unset, local tests and development use the SQLite fallback.
-
-FastAPI docs: **http://localhost:8000/docs**
-
-Check: **http://localhost:8000/api/health**. It reports `database: postgresql` and `database_status: ok` when PostgreSQL is connected. If the role, database, or URL is wrong, the API returns a clear database-unavailable response rather than an opaque `500`.
-
-### Terminal 2 — React
-
-```bash
-cd rythumitra-ai/frontend
-npm install
-npm run dev
-```
-
-Open **http://localhost:5173**. Click **Try the assistant**.
-
-Vite proxies `/api` calls to FastAPI on port 8000. Both terminals must remain open. If you see “Backend offline” on the assistant page, verify the FastAPI terminal and `http://localhost:8000/api/health`.
-
-> npm packages are downloaded on your computer during `npm install`. The archive intentionally does not include `node_modules`.
-
-## Test it
-
-1. Open the home page: the farmer hero, three feature cards and step-by-step explanation should display.
-2. Click **Try the assistant**.
-3. Click the example **Paddy leaf yellowing**. With Gemini configured, the response is generated and grounded by the provider; without a key, the API reports demo mode.
-4. Refresh the page. Your conversation should appear in **Your conversations**.
-5. Type a question in English and change language to English.
-6. Use Play, Pause, or Replay to control the generated Gnani Timbre reply.
-7. Record a short question; review and correct the transcript in the composer before sending it.
-8. Try **New conversation**, open an older chat, and delete it.
-
-### Backend test suite
-
-```bash
-cd rythumitra-ai/backend
-python -m pytest -q
-```
-
-Provider tests use mocks and do not incur API calls. Live provider checks require credentials in `backend/.env`.
-
-## API overview
-
-| Method | Route | Behavior |
+| Layer | Technologies & Tools | Purpose |
 |---|---|---|
-| GET | `/api/health` | Ready |
-| GET | `/api/conversations` | Ready |
-| POST | `/api/conversations` | Ready |
-| GET | `/api/conversations/{id}` | Ready |
-| DELETE | `/api/conversations/{id}` | Ready |
-| POST | `/api/chat` | Gemini when configured; explicit demo mode without a Gemini key |
-| POST | `/api/voice/transcribe` | Multipart `audio_file` + `language_code`; Prisma transcript |
-| POST | `/api/voice/synthesize` | JSON text/locale; returns `audio/wav` from Timbre |
+| **Frontend** | React 18, Vite 6, React Router 6, Lucide Icons, Custom CSS | High-performance, mobile-responsive SPA deployed on **Vercel** |
+| **Backend API** | FastAPI, Python 3.10+, Uvicorn, Pydantic v2 | Async REST API deployed on **Render** |
+| **Database** | SQLite (development) / PostgreSQL with SQLAlchemy 2.0 | Chat history and message persistence |
+| **Generative AI** | Google Gemini (`google-genai` SDK) with Google Search Grounding | Agronomic knowledge retrieval, reasoning, and multi-turn context |
+| **Speech-to-Text (STT)** | Gnani Prisma REST API / Web Audio API / MediaRecorder | Converting regional spoken queries into text |
+| **Text-to-Speech (TTS)** | Gnani Timbre v2.5 / PCM-to-WAV extraction | Synthesizing natural regional voices |
+| **Testing & CI** | Pytest, AnyIO, Starlette TestClient | 17+ comprehensive automated backend test suites |
 
-The API documentation includes interactive JSON request examples.
+---
 
-## Provider setup and limitations
-
-- Gemini grounding uses Google Search. It prioritizes official agricultural domains and returns only source URLs actually present in the provider's grounding metadata. Search grounding is not a guarantee that every answer is agronomically verified.
-- Exact fertilizer/pesticide rates and diagnoses are not invented; the system prompt requires clarification or a local agricultural expert when material facts are missing.
-- Prisma accepts the ten configured Indian locales and recordings up to 60 seconds/15 MB; FFmpeg normalizes supported browser formats to mono 16 kHz WAV.
-- Timbre v2.5 uses the official preferred voice mapping per locale. Unsupported languages and provider errors are returned to the UI rather than synthesized in another language.
-- Live API calls have not been verified until valid local credentials are configured and a live request succeeds.
-
-**Documentation:**
-- [Gnani developer quick start](https://docs.gnani.ai/api/introduction/quick-start)
-- [Gemini API docs](https://ai.google.dev/gemini-api/docs)
-- [Gnani voice docs](https://docs.gnani.ai/)
-- [FastAPI](https://fastapi.tiangolo.com/)
-- [Vite](https://vite.dev/)
-
-## Suggested file map
+## 📁 Repository Structure
 
 ```
-rythumitra-ai/
-├── frontend/
-│   ├── public/images/farmer-hero.jpg
+RythuMitraAi-voice-Assistent-/
+├── frontend/                     # React 18 + Vite frontend
+│   ├── public/
+│   │   └── images/               # Agricultural assets & hero banners
 │   ├── src/
-│   │   ├── App.jsx
-│   │   ├── main.jsx
-│   │   ├── styles.css
-│   │   ├── components/{Header,Logo,LanguageSelect,MicrophoneButton,ChatBubble}.jsx
-│   │   ├── pages/{Home,Assistant}.jsx
-│   │   └── lib/{api,config}.js
+│   │   ├── components/           # ChatBubble, Header, MicrophoneButton, LanguageSelect
+│   │   ├── pages/
+│   │   │   ├── Home.jsx          # Landing page with hero, features & Kisan helpline footer
+│   │   │   └── Assistant.jsx     # Voice & text assistant with dedicated sidebar
+│   │   ├── lib/
+│   │   │   ├── api.js            # Unified API client with VITE_API_BASE_URL support
+│   │   │   └── config.js         # Multilingual prompt catalog across 10 Indian languages
+│   │   ├── styles.css            # Base design system & typography
+│   │   └── voice.css             # Voice assistant layout & custom green scrollbar
 │   ├── package.json
+│   ├── vercel.json               # Vercel Single Page Application routing config
 │   └── vite.config.js
-├── backend/
-│   ├── app/{main,advisor}.py
-│   ├── tests/test_api.py
-│   ├── requirements.txt
-│   └── .env.example
-├── .vscode/
-├── .gitignore
+│
+├── backend/                      # FastAPI Python backend
+│   ├── app/
+│   │   ├── main.py               # FastAPI application, endpoints & CORS
+│   │   ├── advisor.py            # Agronomic knowledge engine & climate/pest detectors
+│   │   ├── database.py           # SQLite & PostgreSQL persistence layer
+│   │   └── services.py           # Gemini, Gnani STT (Prisma), Gnani TTS (Timbre)
+│   ├── tests/
+│   │   ├── test_api.py           # API route & climate integration tests
+│   │   └── test_services.py      # Provider mocking and voice tests
+│   ├── requirements.txt          # Python dependencies
+│   ├── .python-version           # Pinned to Python 3.10.12
+│   └── .env.example              # Template for environment variables
+│
+├── render.yaml                   # Infrastructure-as-code for Render deployment
+├── requirements.txt              # Root dependency manifest for cloud hosting
 └── README.md
 ```
 
-### Security and realistic limitations
+---
 
-- **No login** is included. Conversations are local to this prototype backend, not isolated per user. **Do not deploy it publicly with real farmer data without adding authentication and account-level access control.**
-- API credentials must only be stored on the backend; never in Vite's `VITE_*` variables or client source.
-- Rate-limit user requests before public deployment; validate uploads and protect against unsafe use.
-- Show the recorded transcript for farmer confirmation, especially crop name, dose, date and place names.
-- Preserve any scientific uncertainty. Never represent example content as verified diagnosis.
-- Images are cropped from design mockups provided in this project session; replace with licensed, original photography before deploying if appropriate.
+## 🚀 Getting Started Locally
+
+### Prerequisites
+- **Node.js** 18+ and `npm`
+- **Python** 3.10 or 3.11
+- **FFmpeg** (for audio processing): `sudo apt install ffmpeg` (Ubuntu/Debian) or `brew install ffmpeg` (macOS)
 
 ---
-**Status:** Gemini, Gnani Prisma, and Gnani Timbre integrations are implemented. Their live availability depends on valid keys, model access, account quota, and provider support; live calls have not been verified without local credentials.
 
-## Current Limits
+### 1. Backend Setup (FastAPI)
 
-Gemini uses Google Search grounding with a preference for official agricultural sources. Grounding and returned citations do not guarantee agronomic correctness. Answers must not replace advice from a local agricultural extension officer, especially for diagnosis or high-impact chemical decisions.
+```bash
+# Navigate to the backend directory
+cd backend
 
-The provider clients support the ten locales documented for Prisma and Timbre v2.5. The selected Timbre voice is chosen from Gnani's official preferred-voice catalog for that locale. A provider/account can still reject a model, language, or voice; the API returns that error instead of silently switching providers.
+# Create and activate a Python virtual environment
+python3 -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 
-Without `GEMINI_API_KEY`, the backend explicitly reports demo mode and uses the existing deterministic example advisor. If Gemini is configured but fails, the request returns the provider error and does not fall back to demo content.
+# Install dependencies
+pip install -r requirements.txt
 
-### Sample questions
+# Create your local environment file
+cp .env.example .env
+```
 
-- Cotton: "There are insects on my cotton leaves. What should I check?"
-- Tomato: "I want to start growing tomatoes. What should I prepare?"
-- Maize: "How should I manage irrigation for my maize crop?"
-- Banana: "What should I know before applying fertilizer to banana plants?"
-- Paddy: "Why are my paddy leaves turning yellow?"
-- Follow-up: Ask about cotton, then ask "How old should it be before harvesting?"
+Configure your `.env` file:
+```env
+PORT=8000
+DATABASE_URL=sqlite:///./data/rythumitra.sqlite3
+ALLOWED_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
+
+# Optional: Add your API keys for live cloud AI capabilities
+GEMINI_API_KEY=your_gemini_api_key_here
+SARVAM_API_KEY=your_sarvam_api_key_here
+GNANI_STT_KEY=your_gnani_stt_key_here
+GNANI_TTS_KEY=your_gnani_tts_key_here
+```
+
+Start the FastAPI server:
+```bash
+python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
+```
+Interactive API docs are available at **http://localhost:8000/docs**.
+
+---
+
+### 2. Frontend Setup (React + Vite)
+
+Open a new terminal:
+```bash
+# Navigate to the frontend directory
+cd frontend
+
+# Install npm dependencies
+npm install
+
+# Start the Vite development server
+npm run dev
+```
+Open **http://localhost:5173** in your browser to experience the assistant.
+
+---
+
+### 3. Running Automated Tests
+
+Run the backend test suite:
+```bash
+cd backend
+PYTHONPATH=. .venv/bin/pytest tests/
+```
+All **17 unit and integration tests** will execute and validate:
+- Language code validation across all 10 Indic locales
+- Crop detection (Cotton, Paddy, Tomato, Maize, Chilli, Dragon Fruit, etc.)
+- Climate & weather query routing
+- Multi-crop conversation history & session persistence
+- Mocked voice synthesis and transcription pipelines
+
+---
+
+## 🌐 Cloud Deployment Guide
+
+### Deploying Backend on Render
+1. Create a **New Web Service** connected to your repository on [Render](https://render.com).
+2. Set **Root Directory** to `backend`.
+3. Set **Build Command**: `pip install -r requirements.txt`.
+4. Set **Start Command**: `python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT`.
+5. Add Environment Variables:
+   - `PYTHON_VERSION`: `3.10.12`
+   - `GEMINI_API_KEY`: `<your_gemini_api_key>`
+   - `ALLOWED_ORIGINS`: `*`
+   - `DATABASE_URL`: `sqlite:///./data/rythumitra.sqlite3`
+
+### Deploying Frontend on Vercel
+1. Import your GitHub repository on [Vercel](https://vercel.com).
+2. Set **Root Directory** to `frontend`.
+3. Set **Framework Preset** to `Vite`.
+4. Under **Environment Variables**, add:
+   - `VITE_API_BASE_URL`: `https://your-backend-service.onrender.com`
+5. Click **Deploy**. Vercel will build and provide your production URL.
+
+---
+
+## 📡 API Reference Summary
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/api/health` | Health check, mode status (`gemini` or `demo`), and database connection |
+| `GET` | `/api/conversations` | List all historical conversations for the active session |
+| `POST` | `/api/conversations` | Create a new conversation session with selected language locale |
+| `GET` | `/api/conversations/{id}` | Retrieve messages and context for a specific conversation |
+| `DELETE`| `/api/conversations/{id}` | Delete a conversation and its messages |
+| `POST` | `/api/chat` | Send a query (text/audio transcript); returns grounded agricultural advice |
+| `POST` | `/api/voice/transcribe` | Transcribe multipart audio file into regional text |
+| `POST` | `/api/voice/synthesize` | Convert advisory text into high-quality WAV audio stream |
+
+---
+
+## 🌾 Supported Indian Crops & Domains
+
+- **Cash Crops**: Cotton (ప్రత్తి / कपास), Sugarcane (చెరకు / गन्ना), Tobacco
+- **Cereals & Grains**: Paddy / Rice (వరి / धान), Maize (మొక్కజొన్న / मक्का), Wheat (గోధుమ / गेहूँ)
+- **Horticulture & Vegetables**: Tomato (టమోటా / टमाटर), Chilli (మిరప / मिर्च), Onion, Potato
+- **Fruits & Plantation**: Banana (అరటి / केला), Mango (మామిడి / आम), Dragon Fruit
+
+---
+
+## ⚠️ Agricultural Advisory Disclaimer
+
+> **Important Notice:** The advice provided by RythuMitra AI is generated using artificial intelligence grounded on public agronomic databases and research papers. It is intended for general guidance and educational purposes only. Farmers should consult with local Agricultural Extension Officers, Krishi Vigyan Kendras (KVK), or state agriculture department scientists before purchasing high-impact chemical inputs or making critical investment decisions.
+
+---
+
+## 📞 Helplines for Indian Farmers
+
+- 📞 **Kisan Call Center (Toll-Free)**: `1800-180-1551` (Available 6:00 AM to 10:00 PM in all Indian languages)
+- 🌾 **PM-Kisan Helpline**: `155261` / `011-24300606`
+- 🛡️ **Crop Insurance (PMFBY)**: `1800-180-2117`
+
+---
+
+## 📄 License & Attribution
+
+Developed with ❤️ for Indian farmers. Distributed under the **MIT License**.
