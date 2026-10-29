@@ -58,7 +58,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title='RythuMitra AI API', description='Backend for the multilingual voice-first farming assistant.', version='0.2.0', lifespan=lifespan)
 allowed_origins = [x.strip() for x in os.getenv('ALLOWED_ORIGINS', 'http://localhost:5173,http://127.0.0.1:5173').split(',') if x.strip()]
-app.add_middleware(CORSMiddleware, allow_origins=allowed_origins, allow_methods=['GET', 'POST', 'DELETE'], allow_headers=['Content-Type'])
+app.add_middleware(CORSMiddleware, allow_origins=allowed_origins, allow_methods=['GET', 'POST', 'DELETE'], allow_headers=['*'])
 
 
 @app.exception_handler(SQLAlchemyError)
