@@ -278,20 +278,24 @@ export default function Assistant({ language, setLanguage }) {
   const labels = SECTION_LABELS[language] || SECTION_LABELS['en-IN'];
 
   const usePrompt = (prompt) => sendMessage(prompt.query || prompt.detail);
-  const stageLabel = {
-    idle: language === 'te-IN' ? 'సిద్ధంగా ఉంది' : 'Ready',
-    recording: language === 'te-IN' ? 'వినబడుతోంది · ఆపడానికి నొక్కండి' : 'Recording · tap to stop',
-    transcribing: language === 'te-IN' ? 'జ్ఞాని ప్రిస్మా విశ్లేషిస్తోంది…' : 'Transcribing with Gnani Prisma…',
-    thinking: language === 'te-IN' ? 'జెమిని ఆలోచిస్తోంది…' : 'Thinking with Gemini…',
-    generating_voice: language === 'te-IN' ? 'జ్ఞాని టింబ్రే వాయిస్ తయారవుతోంది…' : 'Generating voice with Gnani Timbre…',
-    ready: language === 'te-IN' ? 'సిద్ధంగా ఉంది' : 'Ready',
-    error: language === 'te-IN' ? 'సమస్య ఎదురైంది' : 'Needs attention',
-  }[voiceStage] || (language === 'te-IN' ? 'సిద్ధంగా ఉంది' : 'Ready');
+  const stageMap = {
+    idle: labels.stageIdle,
+    recording: labels.stageRecording,
+    transcribing: labels.stageTranscribing,
+    thinking: labels.stageThinking,
+    generating_voice: labels.stageGeneratingVoice,
+    ready: labels.stageReady,
+    error: labels.stageError,
+  };
+  const stageLabel = stageMap[voiceStage] || labels.stageReady || 'Ready';
 
   return <div className="assistant-layout">
     {sidebarOpen && <button type="button" className="sidebar-backdrop" aria-label="Close menu" onClick={() => setSidebarOpen(false)}/>}
     <aside className={`assistant-sidebar ${sidebarOpen ? 'show' : ''}`}>
-      <div className="sidebar-top"><Logo compact/><button className="sidebar-close" aria-label="Close sidebar" onClick={()=>setSidebarOpen(false)}><X size={20}/></button></div>
+      <div className="sidebar-top">
+        <Logo compact subtitle={labels.companionSub}/>
+        <button className="sidebar-close" aria-label="Close sidebar" onClick={()=>setSidebarOpen(false)}><X size={20}/></button>
+      </div>
       <Link to="/" className="sidebar-back-top" title={labels.backToHome}><ArrowLeft size={16}/><span>{labels.backToHome}</span></Link>
       <button type="button" className="new-conversation" onClick={handleNew}><Plus size={22}/><span>{labels.newConversation}</span><ArrowRight size={18}/></button>
       <div className="sidebar-section-label">
@@ -302,14 +306,20 @@ export default function Assistant({ language, setLanguage }) {
         {conversations.length ? conversations.map(conv => <div className={`history-entry ${conversationId === conv.id ? 'active' : ''}`} key={conv.id}>
           <button type="button" className="history-open" onClick={() => handleSelectConversation(conv.id)}><MessageCircle size={17}/><span title={conv.title}>{conv.title}</span></button>
           <button type="button" aria-label={`Delete ${conv.title}`} className="history-delete" onClick={e => handleDelete(e, conv.id)}><Trash2 size={15}/></button>
-        </div>) : <p className="history-empty">{language === 'te-IN' ? 'మీరు ప్రశ్న అడిగిన తర్వాత మునుపటి సంభాషణలు ఇక్కడ కనిపిస్తాయి.' : 'Your questions will appear here once you start a conversation.'}</p>}
+        </div>) : <p className="history-empty">{labels.emptyHistory}</p>}
       </div>
       <div className="sidebar-spacer"/>
       <div className="sidebar-section-label quick-label">{labels.exampleQuestions}</div>
       <div className="prompt-sidebar">
         {localizedPrompts.map(p => <button key={p.id || p.title} type="button" onClick={() => { usePrompt(p); setSidebarOpen(false); }}><Sprout size={16}/><span>{p.title}</span><ChevronRight size={14}/></button>)}
       </div>
-      <div className="sidebar-info"><span className="sidebar-info-icon"><ShieldCheck size={18}/></span><div><strong>{language === 'te-IN' ? 'రైతు మిత్ర AI సిద్ధంగా ఉంది' : 'RythuMitra AI Assistant'}</strong><p>{language === 'te-IN' ? 'పంట సలహాలు, పురుగుల నివారణ మరియు వాయిస్ సహాయం కోసం సిద్ధంగా ఉంది.' : 'Direct crop advice, pest solutions, dosages, and voice assistance.'}</p></div></div>
+      <div className="sidebar-info">
+        <span className="sidebar-info-icon"><ShieldCheck size={18}/></span>
+        <div>
+          <strong>{labels.readyTitle}</strong>
+          <p>{labels.readyDesc}</p>
+        </div>
+      </div>
     </aside>
 
     <div className="assistant-main">
@@ -322,7 +332,7 @@ export default function Assistant({ language, setLanguage }) {
         <div className="assistant-top-actions">
           {status === 'offline' && (
             <span className="connection-badge off" title="Cannot connect to server">
-              <i/>{language === 'te-IN' ? 'ఆఫ్‌లైన్' : 'Offline'}
+              <i/>{labels.offline}
             </span>
           )}
           <LanguageSelect language={language} onChange={setLanguage}/>
@@ -331,7 +341,7 @@ export default function Assistant({ language, setLanguage }) {
 
       <div className="chat-area">
         {messages.length === 0 ? <div className="welcome-screen">
-          <div className="welcome-tag"><Sparkles size={15}/> YOUR FARMING COMPANION</div>
+          <div className="welcome-tag"><Sparkles size={15}/> {labels.welcomeTag}</div>
           <h1>{labels.welcomeHeading1}<br/><span>{labels.welcomeHeading2}</span></h1>
           <p>{labels.welcomeDesc}</p>
           <div className={`voice-stage ${listening ? 'voice-active' : ''}`}>
@@ -341,12 +351,28 @@ export default function Assistant({ language, setLanguage }) {
           </div>
           <div className="voice-state"><span className={listening ? 'voice-indicator active' : 'voice-indicator'}/>{stageLabel}</div>
           <div className="welcome-examples"><span>{labels.tryAsking}</span><div>{localizedPrompts.map(p=><button key={p.id || p.title} disabled={busy} type="button" onClick={() => usePrompt(p)}><Leaf size={15}/>{p.title}<ArrowRight size={14}/></button>)}</div></div>
-        </div> : <div className="messages-wrap"><div className="chat-datestamp">Your farming conversation</div>{messages.map(message => <ChatBubble key={message.id} message={message} onPlay={playAnswer} onPause={pauseAnswer} onReplay={message => playAnswer(message, true)} audioMessageId={audioMessageId} audioState={audioState}/>)}{busy && <div className="chat-row assistant-row"><div className="avatar ai-avatar"><Sprout size={20}/></div><div className="thinking-bubble"><span/><span/><span/> {stageLabel}</div></div>}<div ref={messagesEnd}/></div>}
+        </div> : <div className="messages-wrap">
+          <div className="chat-datestamp">{labels.conversationDatestamp}</div>
+          {messages.map(message => (
+            <ChatBubble
+              key={message.id}
+              message={message}
+              onPlay={playAnswer}
+              onPause={pauseAnswer}
+              onReplay={message => playAnswer(message, true)}
+              audioMessageId={audioMessageId}
+              audioState={audioState}
+              labels={labels}
+            />
+          ))}
+          {busy && <div className="chat-row assistant-row"><div className="avatar ai-avatar"><Sprout size={20}/></div><div className="thinking-bubble"><span/><span/><span/> {stageLabel}</div></div>}
+          <div ref={messagesEnd}/>
+        </div>}
       </div>
 
       <div className="composer-area">
         {error && <div role="alert" className="error-notice"><AlertCircle size={18}/><span>{error}</span><button type="button" onClick={() => setError('')} aria-label="Dismiss error"><X size={16}/></button></div>}
-        {transcriptNeedsReview && <div className="transcript-review" role="status">Review the transcript, correct it if needed, then send your question.</div>}
+        {transcriptNeedsReview && <div className="transcript-review" role="status">{labels.transcriptReview}</div>}
 
         {listening ? (
           <div className="active-voice-panel" role="status">
@@ -373,7 +399,7 @@ export default function Assistant({ language, setLanguage }) {
               <div className="mic-circle"><Mic2 size={16}/></div>
               <span>{messages.length > 0 ? labels.tapToSpeakAgain : labels.tapToSpeak}</span>
             </button>
-            {stageLabel && stageLabel !== 'Ready' && stageLabel !== 'సిద్ధంగా ఉంది' && <span className="voice-stage-pill">{stageLabel}</span>}
+            {stageLabel && stageLabel !== labels.stageReady && <span className="voice-stage-pill">{stageLabel}</span>}
           </div>
         )}
 
@@ -409,7 +435,7 @@ export default function Assistant({ language, setLanguage }) {
               disabled={busy || voiceStage === 'transcribing' || voiceStage === 'generating_voice'}
             >
               <Mic2 size={12}/>
-              {listening ? (language === 'te-IN' ? 'ఆపండి (Stop)' : 'Stop') : (language === 'te-IN' ? 'నోటితో అడగండి (Speak)' : 'Speak')}
+              {listening ? labels.stopAndSend : labels.voiceReply}
             </button>
           </div>
           <label className="autoplay-control">
